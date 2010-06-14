@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>Conta {{ account.name }}</h1>
+
+{% if accounts %}
+    <p>Você já possui as seguintes contas cadastradas:</p>
+    <ul>
+    {% for account in accounts %}
+        <li>
+            <a href="{{ account.slug }}/">
+                {{ account.name }} ({{ account.n_customers }})
+            </a>
+        </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>Você ainda não possui nenhuma conta.</p>
+{% endif %}
+
+<h2>Crie uma nova conta</h2>
+
+<form action="" method="post">
+{{ form.as_p }}
+<input type="submit" value="Adicionar" />
+</form>
+
+{% endblock %}

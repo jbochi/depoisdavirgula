@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>Categorias de {{ type }}</h1>
+
+{% if categories %}
+    <p>Você já possui as categorias cadastradas:</p>
+    <ul>
+    {% for category in categories.itervalues|dictsort:"name" %}
+        <li>
+            {{ category.name }}
+            {% if category.childs %}
+                <ul>
+	            {% for child in category.childs.itervalues|dictsort:"name" %}
+	                <li>{{ child.name }}</li>
+	            {% endfor %}
+	            </ul>
+	        {% endif %}    
+        </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>Você ainda não possui nenhuma categoria cadastrada.</p>
+{% endif %}
+
+<h2>Crie uma nova categoria</h2>
+
+<form action="" method="post">
+{{ form.as_p }}
+<input type="submit" value="Adicionar" />
+</form>
+
+{% endblock %}

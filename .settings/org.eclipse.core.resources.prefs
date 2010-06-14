@@ -1,0 +1,12 @@
+#Sat Jun 05 11:48:58 BRT 2010
+eclipse.preferences.version=1
+encoding//src/main.py=utf-8
+encoding//src/models.py=utf-8
+encoding//src/templates=UTF-8
+encoding//src/templates/account_details.html=UTF-8
+encoding//src/templates/accounts.html=utf-8
+encoding//src/templates/categories.html=UTF-8
+encoding//src/templates/customer_details.html=utf-8
+encoding//src/templates/customer_new.html=utf-8
+encoding//src/templates/main.html=UTF-8
+encoding/src=UTF-8

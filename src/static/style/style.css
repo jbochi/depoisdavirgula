@@ -1,0 +1,23 @@
+body {
+	font-family: Arial;
+	font-size: 10pt;
+}
+
+div.title {
+	font-size: 1.6em;
+	float: left;
+}
+
+div.login {
+	float: right;
+}
+
+ul.menu {
+	clear: both;
+	float: left;
+	margin-right: 50px;
+}
+
+div.contents {
+	float: left;
+}

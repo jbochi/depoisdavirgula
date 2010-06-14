@@ -1,0 +1,18 @@
+application: depoisdavirgula
+version: 2
+runtime: python
+api_version: 1
+
+handlers:
+- url: /stats.*
+  script: $PYTHON_LIB/google/appengine/ext/appstats/ui.py  
+
+- url: /remote_api
+  script: $PYTHON_LIB/google/appengine/ext/remote_api/handler.py
+  login: admin
+      
+- url: /style
+  static_dir: static/style
+
+- url: /.*
+  script: main.py

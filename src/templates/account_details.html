@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>Clientes da conta {{ account.name }}</h1>
+
+{% if customers %}
+    <p>Você já possui {{ account.n_customers }} cliente{{ account.n_customers|pluralize }} cadastrado{{ account.n_customers|pluralize }}:</p>
+    <ul>
+    {% for customer in customers %}
+        <li>
+            <a href="{{ customer.get_absolute_url }}">
+                {{ customer.name }}
+            </a>
+        </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>Você ainda não possui nenhum cliente.</p>
+{% endif %}
+
+<a href="{{ account.get_absolute_url }}new/">Crie um novo cliente</a>
+
+{% endblock %}
