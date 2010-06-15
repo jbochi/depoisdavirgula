@@ -37,6 +37,12 @@ indexes:
   properties:
   - name: type
   - name: user
+  - name: name
+
+- kind: Category
+  properties:
+  - name: type
+  - name: user
   - name: parent_category
   - name: name
 

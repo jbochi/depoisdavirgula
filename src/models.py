@@ -71,6 +71,19 @@ class Category(db.Model):
     def __unicode__(self):
         return self.name
 
+
+class Transaction(db.Model):
+    account = db.ReferenceProperty(Account, verbose_name="conta")
+    customer = db.ReferenceProperty(Customer, verbose_name="cliente")
+    user = db.UserProperty()
+    category = db.ReferenceProperty(Category, verbose_name="categoria")
+    description = db.StringProperty(verbose_name="descrição")
+    notes = db.TextProperty(verbose_name="notas")
+    date = db.DateProperty(verbose_name="data")
+    value = db.FloatProperty(verbose_name="valor")
+    date_added = db.DateTimeProperty(auto_now_add=True)
+
+
 def prefetch_refprop(entities, prop):
     ref_keys = [prop.get_value_for_datastore(x) for x in entities]
     existing_ref_keys = set(filter(lambda key: key is not None, ref_keys))

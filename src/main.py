@@ -9,8 +9,8 @@ from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 
-from forms import AccountForm, CustomerForm, CategoryForm
-from models import Account, Customer, Category, prefetch_refprop
+from forms import AccountForm, CustomerForm, CategoryForm, ExpenseForm
+from models import Account, Customer, Category, Transaction, prefetch_refprop
 
 class MainPage(webapp.RequestHandler):
     def get(self):
@@ -172,6 +172,7 @@ class CustomerDelete(webapp.RequestHandler):
         else:
             self.redirect(users.create_login_url(self.request.uri))
 
+
 class Categories(webapp.RequestHandler):
     def _handler(self, type, post=False):
         user = users.get_current_user()
@@ -207,11 +208,8 @@ class Categories(webapp.RequestHandler):
                     categories_dict[category.key()] = {'name': category.name,
                                                       'childs': {}}
                 else:
-                    try:
-                        parent = categories_dict[parent_category_key]['childs']
-                        parent[category.key()] = {'name': category.name}
-                    except:
-                        raise ValueError(categories_dict.keys())
+                    parent = categories_dict[parent_category_key]['childs']
+                    parent[category.key()] = {'name': category.name}
 
             path = os.path.join(os.path.dirname(__file__), 'templates/categories.html')
             self.response.out.write(template.render(path, {
@@ -230,6 +228,80 @@ class Categories(webapp.RequestHandler):
     def post(self, type=None):
         self._handler(type, post=True)
 
+
+class Expenses(webapp.RequestHandler):
+    def _handler(self, post=False):
+        user = users.get_current_user()
+        if user:
+            if post:
+                form = ExpenseForm(user, data=self.request.POST)
+                if form.is_valid():
+                    transaction = form.save(commit=False)
+                    transaction.user = user
+                    transaction.put()
+                    self.redirect(self.request.uri)
+            else:
+                form = ExpenseForm(user)
+
+            expenses = Transaction.all().filter('user =', user)
+            path = os.path.join(os.path.dirname(__file__), 'templates/expenses.html')
+            self.response.out.write(template.render(path, {
+                'expenses': expenses,
+                'form': form,
+                'user': user,
+                'logout_url': users.create_logout_url("/")
+            }))
+        else:
+            self.redirect(users.create_login_url(self.request.uri))
+
+    def get(self):
+        self._handler()
+
+    def post(self):
+        self._handler(post=True)
+
+
+class Expense(webapp.RequestHandler):
+    def _handler(self, expense_key, post=False):
+        user = users.get_current_user()
+
+        if user:
+            instance = Transaction.get(expense_key)
+            if post:
+                form = ExpenseForm(user, instance=instance, data=self.request.POST)
+                if form.is_valid():
+                    form.save()
+                    self.redirect("/despesas/")
+
+            form = ExpenseForm(user, instance=instance)
+            path = os.path.join(os.path.dirname(__file__), 'templates/expense.html')
+            self.response.out.write(template.render(path, {
+                'form': form,
+                'user': user,
+                'logout_url': users.create_logout_url("/")
+            }))
+        else:
+            self.redirect(users.create_login_url(self.request.uri))
+
+    def get(self, expense_key):
+        self._handler(expense_key)
+
+    def post(self, expense_key):
+        self._handler(expense_key, post=True)
+
+
+class ExpenseDelete(webapp.RequestHandler):
+    def get(self, expense_key):
+        user = users.get_current_user()
+
+        if user:
+            instance = Transaction.get(expense_key)
+            instance.delete()
+            self.redirect("/despesas/")
+        else:
+            self.redirect(users.create_login_url(self.request.uri))
+
+
 application = webapp.WSGIApplication([('/', MainPage),
                                       ('/contas/', Accounts),
                                       ('/contas/(.*)/new/', CustomerNew),
@@ -239,6 +311,9 @@ application = webapp.WSGIApplication([('/', MainPage),
                                       ('/categorias/', Categories),
                                       ('/categorias/([^/]+)/', Categories),
                                       ('/categorias/([^/]+)/', Categories),
+                                      ('/despesas/', Expenses),
+                                      ('/despesas/([^/]+)/', Expense),
+                                      ('/despesas/([^/]+)/delete/', ExpenseDelete),
                                       ], debug=True)
 
 

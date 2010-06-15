@@ -1,5 +1,6 @@
 from google.appengine.ext.db import djangoforms
-from models import Account, Customer, Category
+from django.forms import ValidationError
+from models import Account, Customer, Category, Transaction
 
 class AccountForm(djangoforms.ModelForm):
     class Meta:
@@ -14,7 +15,6 @@ class CustomerForm(djangoforms.ModelForm):
 class CategoryForm(djangoforms.ModelForm):
     def __init__(self, user, type, *args, **kwargs):
         super(CategoryForm, self).__init__(*args, **kwargs)
-        #raise ValueError(dir(self.fields['parent_category']))
         self.fields['parent_category'].query = Category.all()\
             .filter('user =', user)\
             .filter('type =', type)\
@@ -24,3 +24,17 @@ class CategoryForm(djangoforms.ModelForm):
     class Meta:
         model = Category
         exclude = ['user', 'type']
+
+
+class ExpenseForm(djangoforms.ModelForm):
+    def __init__(self, user, *args, **kwargs):
+        super(ExpenseForm, self).__init__(*args, **kwargs)
+        self.fields['account'].query = Account.all().filter('user =', user)
+        self.fields['category'].query = Category.all()\
+            .filter('user =', user)\
+            .filter('type =', 'Custo')\
+            .order('name')
+
+    class Meta:
+        model = Transaction
+        exclude = ['user', 'customer']

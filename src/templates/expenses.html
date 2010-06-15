@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Despesas</h1>
+<table border="1" width="600px">
+    <tr>
+        <th>Data</th>
+        <th>Conta</th>
+        <th>Descrição</th>
+        <th>Valor</th>
+    </tr>
+    {% for expense in expenses %}
+        <tr>
+            <td>{{ expense.date }}</td>
+            <td>{{ expense.account }}</td>
+            <td>
+                <a href="{{ expense.key }}/">
+                    {{ expense.description }}
+                </a>
+            </td>
+            <td>{{ expense.value }}</td>
+        </tr>
+    {% empty %}
+        <tr>
+            <td colspan="4">Nenhuma despesa cadastrada.</td>
+        </tr>
+    {% endfor %}
+</table>    
+<h2>Adicionar despesa</h2>
+<form action="" method="post">
+{{ form.as_p }}
+<input type="submit" value="Adicionar" />
+</form>
+
+{% endblock %}
