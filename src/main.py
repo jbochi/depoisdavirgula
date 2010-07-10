@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import datetime
 import os
 
 from google.appengine.dist import use_library
@@ -241,7 +242,15 @@ class Expenses(webapp.RequestHandler):
             else:
                 form = ExpenseForm(user)
 
-            expenses = Transaction.all().filter('user =', user).order('-date')
+            # setup date filter. default is current month
+            now = datetime.datetime.now()            
+            start = datetime.date(now.year, now.month, 1)
+            
+            expenses = Transaction.all()\
+                .filter('user =', user)\
+                .filter('date >=', start)\
+                .order('-date')
+                
             path = os.path.join(os.path.dirname(__file__), 'templates/expenses.html')
             self.response.out.write(template.render(path, {
                 'expenses': expenses,

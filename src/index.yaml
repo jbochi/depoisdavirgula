@@ -61,4 +61,9 @@ indexes:
   properties:
   - name: user
   - name: date
+
+- kind: Transaction
+  properties:
+  - name: user
+  - name: date
     direction: desc
