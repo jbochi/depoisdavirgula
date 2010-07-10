@@ -1,14 +1,17 @@
 # -*- coding: utf-8 -*-
 import datetime
 import os
+import time
 
 from google.appengine.dist import use_library
 use_library('django', '1.1')
 
+from django.utils import simplejson
 from google.appengine.api import users
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
+
 
 from forms import AccountForm, CustomerForm, CategoryForm, ExpenseForm
 from models import Account, Customer, Category, Transaction
@@ -245,7 +248,7 @@ class Expenses(webapp.RequestHandler):
             # setup date filter. default is current month
             now = datetime.datetime.now()            
             start = datetime.date(now.year, now.month, 1)
-            
+              
             expenses = Transaction.all()\
                 .filter('user =', user)\
                 .filter('date >=', start)\
@@ -253,9 +256,11 @@ class Expenses(webapp.RequestHandler):
                 
             path = os.path.join(os.path.dirname(__file__), 'templates/expenses.html')
             self.response.out.write(template.render(path, {
+                'start': start,
                 'expenses': expenses,
                 'form': form,
                 'user': user,
+                'js_data': calc_expenses_js_data(expenses),
                 'logout_url': users.create_logout_url("/")
             }))
         else:
@@ -308,6 +313,14 @@ class ExpenseDelete(webapp.RequestHandler):
         else:
             self.redirect(users.create_login_url(self.request.uri))
 
+
+def calc_expenses_js_data(expenses):
+    def trans(expense):
+        half_day = 86400000 / 2
+        epoch_time = time.mktime(expense.date.timetuple()) * 1000 - half_day 
+        return [epoch_time, expense.value]
+    
+    return simplejson.dumps([trans(expense) for expense in expenses])        
 
 application = webapp.WSGIApplication([('/', MainPage),
                                       ('/contas/', Accounts),

@@ -14,5 +14,8 @@ handlers:
 - url: /style
   static_dir: static/style
 
+- url: /js
+  static_dir: static/js
+
 - url: /.*
   script: main.py
