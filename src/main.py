@@ -241,7 +241,7 @@ class Expenses(webapp.RequestHandler):
             else:
                 form = ExpenseForm(user)
 
-            expenses = Transaction.all().filter('user =', user)
+            expenses = Transaction.all().filter('user =', user).order('-date')
             path = os.path.join(os.path.dirname(__file__), 'templates/expenses.html')
             self.response.out.write(template.render(path, {
                 'expenses': expenses,
