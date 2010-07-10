@@ -193,8 +193,6 @@ class Categories(webapp.RequestHandler):
             else:
                 form = CategoryForm(user, type)
 
-            #should filter by user, but index is being built
-            #
             categories = Category.all()\
                 .filter('user =', user)\
                 .filter('type =', type)\
