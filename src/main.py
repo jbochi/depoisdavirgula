@@ -315,12 +315,14 @@ class ExpenseDelete(webapp.RequestHandler):
 
 
 def calc_expenses_js_data(expenses):
-    def trans(expense):
-        half_day = 86400000 / 2
-        epoch_time = time.mktime(expense.date.timetuple()) * 1000 - half_day 
-        return [epoch_time, expense.value]
+    values = {}
     
-    return simplejson.dumps([trans(expense) for expense in expenses])        
+    for expense in expenses:
+        half_day = 86400000 / 2 #to make the value be in the "center" of the day 
+        epoch_time = time.mktime(expense.date.timetuple()) * 1000 - half_day        
+        values[epoch_time] = values.get(epoch_time, 0) + expense.value
+    
+    return simplejson.dumps(list(values.iteritems()))
 
 application = webapp.WSGIApplication([('/', MainPage),
                                       ('/contas/', Accounts),
