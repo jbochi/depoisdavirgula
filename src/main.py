@@ -13,7 +13,7 @@ from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 
 
-from forms import AccountForm, CustomerForm, CategoryForm, ExpenseForm
+from forms import AccountForm, CustomerForm, CategoryForm, DateRangeForm, ExpenseForm
 from models import Account, Customer, Category, Transaction
 
 class MainPage(webapp.RequestHandler):
@@ -246,17 +246,37 @@ class Expenses(webapp.RequestHandler):
                 form = ExpenseForm(user)
 
             # setup date filter. default is current month
-            now = datetime.datetime.now()            
-            start = datetime.date(now.year, now.month, 1)
+            now = datetime.datetime.now()
+            
+            def str2date(str):
+                year, month, day = map(int, str.split('-'))
+                return datetime.date(year, month, day)            
+            
+            if 'start' in self.request.GET:
+                start = str2date(self.request.GET['start'])
+            else:
+                start = datetime.date(now.year, now.month, 1)
+            
+            if 'end' in self.request.GET:
+                end = str2date(self.request.GET['end'])
+            else:
+                end = datetime.date(now.year, now.month, now.day)
+            
+            date_range_form = DateRangeForm()
+            date_range_form.fields['start'].initial = start
+            date_range_form.fields['end'].initial = end
               
             expenses = Transaction.all()\
                 .filter('user =', user)\
                 .filter('date >=', start)\
+                .filter('date <', end)\
                 .order('-date')
                 
             path = os.path.join(os.path.dirname(__file__), 'templates/expenses.html')
             self.response.out.write(template.render(path, {
                 'start': start,
+                'end': end,
+                'date_range_form': date_range_form,
                 'expenses': expenses,
                 'form': form,
                 'user': user,

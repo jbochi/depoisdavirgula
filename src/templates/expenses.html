@@ -16,6 +16,7 @@
             bars: { show: true, barWidth: day_in_ms, fill: 0.9 },
             xaxis: {
                 min: {{ start|date:"U" }} * 1000,
+                max: {{ end|date:"U" }} * 1000,
                 mode: "time", 
                 timeformat: "%b %d",
                 monthNames: ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
@@ -51,6 +52,12 @@
         </tr>
     {% endfor %}
 </table>
+<h2>Filtro</h2>
+<form action="" method="get">
+{{ date_range_form.as_p }}
+<input type="submit" value="Filtrar" />
+</form>
+
 <h2>Adicionar despesa</h2>
 <form action="" method="post">
 {{ form.as_p }}

@@ -1,5 +1,6 @@
+# -*- coding: utf-8 -*-
 from google.appengine.ext.db import djangoforms
-from django.forms import ValidationError
+from django import forms
 from models import Account, Customer, Category, Transaction
 
 class AccountForm(djangoforms.ModelForm):
@@ -38,3 +39,8 @@ class ExpenseForm(djangoforms.ModelForm):
     class Meta:
         model = Transaction
         exclude = ['user', 'customer']
+
+
+class DateRangeForm(forms.Form):
+    start = forms.DateField(label="início")
+    end = forms.DateField(label="fim")
