@@ -34,7 +34,7 @@ class ExpenseForm(djangoforms.ModelForm):
         self.fields['category'].query = Category.all()\
             .filter('user =', user)\
             .filter('type =', 'Custo')\
-            .order('name')
+            .order('name').fetch(1000)
 
     class Meta:
         model = Transaction

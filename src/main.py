@@ -14,7 +14,7 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 
 
 from forms import AccountForm, CustomerForm, CategoryForm, DateRangeForm, ExpenseForm
-from models import Account, Customer, Category, Transaction
+from models import Account, Customer, Category, Transaction, prefetch_refprop
 
 class MainPage(webapp.RequestHandler):
     def get(self):
@@ -270,7 +270,9 @@ class Expenses(webapp.RequestHandler):
                 .filter('user =', user)\
                 .filter('date >=', start)\
                 .filter('date <', end)\
-                .order('-date')
+                .order('-date').fetch(1000)
+                
+            prefetch_refprop(expenses, Transaction.account)
                 
             path = os.path.join(os.path.dirname(__file__), 'templates/expenses.html')
             self.response.out.write(template.render(path, {
