@@ -281,6 +281,7 @@ class Expenses(webapp.RequestHandler):
                 'form': form,
                 'user': user,
                 'js_data': calc_expenses_js_data(expenses),
+                'total': sum([expense.value for expense in expenses]),
                 'logout_url': users.create_logout_url("/")
             }))
         else:
