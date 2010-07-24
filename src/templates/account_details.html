@@ -9,7 +9,7 @@
     <ul>
     {% for customer in customers %}
         <li>
-            <a href="{{ customer.get_absolute_url }}">
+            <a href="{{ customer.slug }}/">
                 {{ customer.name }}
             </a>
         </li>
