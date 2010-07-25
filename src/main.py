@@ -388,7 +388,9 @@ class Income(webapp.RequestHandler):
             if post:
                 form = IncomeForm(user, instance=instance, data=self.request.POST)
                 if form.is_valid():
-                    form.save()
+                    transaction = form.save(commit=False)
+                    transaction.account = transaction.customer.account
+                    transaction.put()
                     self.redirect("/receitas/")
 
             form = IncomeForm(user, instance=instance)
