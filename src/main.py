@@ -252,7 +252,7 @@ class Expenses(webapp.RequestHandler):
                 .filter('user =', user)\
                 .filter('income =', False)\
                 .filter('date >=', start)\
-                .filter('date <', end)\
+                .filter('date <=', end)\
                 .order('-date').fetch(1000)
                 
             prefetch_refprops(expenses, Transaction.account)
@@ -349,7 +349,7 @@ class Incomes(webapp.RequestHandler):
                 .filter('user =', user)\
                 .filter('income =', True)\
                 .filter('date >=', start)\
-                .filter('date <', end)\
+                .filter('date <=', end)\
                 .order('-date').fetch(1000)
                 
             prefetch_refprops(incomes, Transaction.account, Transaction.customer)
