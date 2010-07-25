@@ -391,7 +391,7 @@ class Income(webapp.RequestHandler):
                     form.save()
                     self.redirect("/receitas/")
 
-            form = ExpenseForm(user, instance=instance)
+            form = IncomeForm(user, instance=instance)
             path = os.path.join(os.path.dirname(__file__), 'templates/income.html')
             self.response.out.write(template.render(path, {
                 'form': form,
