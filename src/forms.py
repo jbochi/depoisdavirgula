@@ -11,7 +11,7 @@ class AccountForm(djangoforms.ModelForm):
 class CustomerForm(djangoforms.ModelForm):
     class Meta:
         model = Customer
-        exclude = ['account', 'slug']
+        exclude = ['account', 'user', 'slug']
 
 class CategoryForm(djangoforms.ModelForm):
     def __init__(self, user, type, *args, **kwargs):
@@ -29,8 +29,8 @@ class CategoryForm(djangoforms.ModelForm):
 
 class ExpenseForm(djangoforms.ModelForm):
     def __init__(self, user, *args, **kwargs):
-        super(ExpenseForm, self).__init__(*args, **kwargs)
-        self.fields['account'].query = Account.all().filter('user =', user)
+        super(ExpenseForm, self).__init__(*args, **kwargs) 
+        self.fields['account'].query = Account.all().filter('user =', user).order('name')                            
         self.fields['category'].query = Category.all()\
             .filter('user =', user)\
             .filter('type =', 'Custo')\
@@ -38,7 +38,21 @@ class ExpenseForm(djangoforms.ModelForm):
 
     class Meta:
         model = Transaction
-        exclude = ['user', 'customer']
+        exclude = ['user', 'customer', 'income']
+
+
+class IncomeForm(djangoforms.ModelForm):
+    def __init__(self, user, *args, **kwargs):
+        super(IncomeForm, self).__init__(*args, **kwargs)
+        self.fields['customer'].query = Customer.all().filter('user =', user)
+        self.fields['category'].query = Category.all()\
+            .filter('user =', user)\
+            .filter('type =', 'Receita')\
+            .order('name').fetch(1000)
+            
+    class Meta:
+        model = Transaction
+        exclude = ['user', 'account', 'income']
 
 
 class DateRangeForm(forms.Form):

@@ -13,18 +13,15 @@ from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 
 
-from forms import AccountForm, CustomerForm, CategoryForm, DateRangeForm, ExpenseForm
-from models import Account, Customer, Category, Transaction, prefetch_refprop
+from forms import AccountForm, CustomerForm, CategoryForm, DateRangeForm, ExpenseForm, IncomeForm
+from models import Account, Customer, Category, Transaction, prefetch_refprops
+
 
 class MainPage(webapp.RequestHandler):
     def get(self):
         user = users.get_current_user()
         if user:
-            path = os.path.join(os.path.dirname(__file__), 'templates/main.html')
-            self.response.out.write(template.render(path, {
-                'user': user,
-                'logout_url': users.create_logout_url("/")
-            }))
+            self.redirect('/despesas/')
         else:
             self.redirect(users.create_login_url('/'))
 
@@ -99,6 +96,7 @@ class CustomerNew(webapp.RequestHandler):
                     # Save the data, and redirect to the view page
                     entity = form.save(commit=False)
                     entity.account = account
+                    entity.user = user
                     entity.put()
                     account.n_customers += 1
                     account.put()
@@ -245,34 +243,19 @@ class Expenses(webapp.RequestHandler):
             else:
                 form = ExpenseForm(user)
 
-            # setup date filter. default is current month
-            now = datetime.datetime.now()
-            
-            def str2date(str):
-                year, month, day = map(int, str.split('-'))
-                return datetime.date(year, month, day)            
-            
-            if 'start' in self.request.GET:
-                start = str2date(self.request.GET['start'])
-            else:
-                start = datetime.date(now.year, now.month, 1)
-            
-            if 'end' in self.request.GET:
-                end = str2date(self.request.GET['end'])
-            else:
-                end = datetime.date(now.year, now.month, now.day)
-            
+            start, end = get_start_end_range(self.request)            
             date_range_form = DateRangeForm()
             date_range_form.fields['start'].initial = start
             date_range_form.fields['end'].initial = end
               
             expenses = Transaction.all()\
                 .filter('user =', user)\
+                .filter('income =', False)\
                 .filter('date >=', start)\
                 .filter('date <', end)\
                 .order('-date').fetch(1000)
                 
-            prefetch_refprop(expenses, Transaction.account)
+            prefetch_refprops(expenses, Transaction.account)
                 
             path = os.path.join(os.path.dirname(__file__), 'templates/expenses.html')
             self.response.out.write(template.render(path, {
@@ -302,6 +285,9 @@ class Expense(webapp.RequestHandler):
 
         if user:
             instance = Transaction.get(expense_key)
+            if instance.user != user:
+                self.redirect(users.create_login_url(self.request.uri))
+            
             if post:
                 form = ExpenseForm(user, instance=instance, data=self.request.POST)
                 if form.is_valid():
@@ -331,11 +317,129 @@ class ExpenseDelete(webapp.RequestHandler):
 
         if user:
             instance = Transaction.get(expense_key)
-            instance.delete()
+            if instance.user == user:
+                instance.delete()
             self.redirect("/despesas/")
         else:
             self.redirect(users.create_login_url(self.request.uri))
 
+
+class Incomes(webapp.RequestHandler):
+    def _handler(self, post=False):
+        user = users.get_current_user()
+        if user:
+            if post:
+                form = IncomeForm(user, data=self.request.POST)
+                if form.is_valid():
+                    transaction = form.save(commit=False)
+                    transaction.account = transaction.customer.account                    
+                    transaction.user = user
+                    transaction.income = True
+                    transaction.put()
+                    self.redirect(self.request.uri)
+            else:
+                form = IncomeForm(user)
+
+            start, end = get_start_end_range(self.request)            
+            date_range_form = DateRangeForm()
+            date_range_form.fields['start'].initial = start
+            date_range_form.fields['end'].initial = end
+              
+            incomes = Transaction.all()\
+                .filter('user =', user)\
+                .filter('income =', True)\
+                .filter('date >=', start)\
+                .filter('date <', end)\
+                .order('-date').fetch(1000)
+                
+            prefetch_refprops(incomes, Transaction.account, Transaction.customer)
+                
+            path = os.path.join(os.path.dirname(__file__), 'templates/incomes.html')
+            self.response.out.write(template.render(path, {
+                'start': start,
+                'end': end,
+                'date_range_form': date_range_form,
+                'incomes': incomes,
+                'form': form,
+                'user': user,
+                'js_data': calc_expenses_js_data(incomes),
+                'total': sum([income.value for income in incomes]),
+                'logout_url': users.create_logout_url("/")
+            }))
+        else:
+            self.redirect(users.create_login_url(self.request.uri))
+
+    def get(self):
+        self._handler()
+
+    def post(self):
+        self._handler(post=True)
+
+
+class Income(webapp.RequestHandler):
+    def _handler(self, expense_key, post=False):
+        user = users.get_current_user()
+
+        if user:
+            instance = Transaction.get(expense_key)
+            if instance.user != user:
+                self.redirect(users.create_login_url(self.request.uri))
+                
+            if post:
+                form = IncomeForm(user, instance=instance, data=self.request.POST)
+                if form.is_valid():
+                    form.save()
+                    self.redirect("/receitas/")
+
+            form = ExpenseForm(user, instance=instance)
+            path = os.path.join(os.path.dirname(__file__), 'templates/income.html')
+            self.response.out.write(template.render(path, {
+                'form': form,
+                'user': user,
+                'logout_url': users.create_logout_url("/")
+            }))
+        else:
+            self.redirect(users.create_login_url(self.request.uri))
+
+    def get(self, expense_key):
+        self._handler(expense_key)
+
+    def post(self, expense_key):
+        self._handler(expense_key, post=True)
+
+
+class IncomeDelete(webapp.RequestHandler):
+    def get(self, expense_key):
+        user = users.get_current_user()
+
+        if user:
+            instance = Transaction.get(expense_key)
+            if instance.user == user:
+                instance.delete()
+            self.redirect("/receitas/")
+        else:
+            self.redirect(users.create_login_url(self.request.uri))
+
+
+def get_start_end_range(request):
+    # setup date filter. default is current month
+    now = datetime.datetime.now()            
+    def str2date(str):
+        year, month, day = map(int, str.split('-'))
+        return datetime.date(year, month, day)            
+    
+    if 'start' in request.GET:
+        start = str2date(request.GET['start'])
+    else:
+        start = datetime.date(now.year, now.month, 1)
+    
+    if 'end' in request.GET:
+        end = str2date(request.GET['end'])
+    else:
+        end = datetime.date(now.year, now.month, now.day)
+    
+    return start, end
+    
 
 def calc_expenses_js_data(expenses):
     values = {}
@@ -359,6 +463,9 @@ application = webapp.WSGIApplication([('/', MainPage),
                                       ('/despesas/', Expenses),
                                       ('/despesas/([^/]+)/', Expense),
                                       ('/despesas/([^/]+)/delete/', ExpenseDelete),
+                                      ('/receitas/', Incomes),
+                                      ('/receitas/([^/]+)/', Income),
+                                      ('/receitas/([^/]+)/delete/', IncomeDelete),
                                       ], debug=True)
 
 

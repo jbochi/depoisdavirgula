@@ -22,7 +22,7 @@ class Account(db.Model):
 
 class Customer(db.Model):
     account = db.ReferenceProperty(Account, verbose_name="conta")
-
+    user = db.UserProperty()
     name = db.StringProperty(verbose_name="nome", required=True)
     status = db.StringProperty(choices=["ativo", "desativado", "reativado"], default="ativo")
     email = db.EmailProperty(verbose_name="e-mail")
@@ -49,6 +49,9 @@ class Customer(db.Model):
     @DerivedProperty
     def slug(self):
         return str(slugify(self.name))
+
+    def __unicode__(self):
+        return u"%s" % (self.name, ) 
 
     def get_absolute_url(self):
         return "%s%s/" % (self.account.get_absolute_url(), self.slug)
@@ -82,12 +85,13 @@ class Transaction(db.Model):
     date = db.DateProperty(verbose_name="data")
     value = db.FloatProperty(verbose_name="valor")
     date_added = db.DateTimeProperty(auto_now_add=True)
+    income = db.BooleanProperty(default=False)
 
 
-def prefetch_refprop(entities, prop):
-    ref_keys = [prop.get_value_for_datastore(x) for x in entities]
-    existing_ref_keys = set(filter(lambda key: key is not None, ref_keys))
-    ref_entities = dict((x.key(), x) for x in db.get(existing_ref_keys))
-    for entity, ref_key in zip(entities, ref_keys):
+def prefetch_refprops(entities, *props):
+    fields = [(entity, prop) for entity in entities for prop in props]
+    ref_keys = [prop.get_value_for_datastore(x) for x, prop in fields]
+    ref_entities = dict((x.key(), x) for x in db.get(set(ref_keys)))
+    for (entity, prop), ref_key in zip(fields, ref_keys):
         prop.__set__(entity, ref_entities[ref_key])
     return entities

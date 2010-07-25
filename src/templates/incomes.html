@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block head %}
+<!--[if IE]><script language="javascript" type="text/javascript" src="/js/excanvas.min.js"></script><![endif]--> 
+<script language="javascript" type="text/javascript" src="/js/jquery.js"></script>
+<script language="javascript" type="text/javascript" src="/js/jquery.flot.js"></script> 
+{% endblock %}
+
+{% block content %}
+<script type="text/javascript" charset="utf-8">
+    $(function () {
+        var d = {{ js_data }};
+        var day_in_ms = 86400000.0;
+        
+        $.plot($("#placeholder"), [d], {
+            bars: { show: true, barWidth: day_in_ms, fill: 0.9 },
+            xaxis: {
+                min: {{ start|date:"U" }} * 1000,
+                max: {{ end|date:"U" }} * 1000,
+                mode: "time", 
+                timeformat: "%b %d",
+                monthNames: ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
+            },
+            grid: { show: true, hoverable: true }            
+        });
+    }); 
+</script> 
+
+<h1>Receitas (R$ {{ total|floatformat:"2" }})</h1>
+<div id="placeholder" style="width:600px;height:200px;"></div>
+<table border="1" width="600px">
+    <tr>
+        <th>Data</th>
+        <th>Conta</th>
+        <th>Cliente</th>
+        <th>Descrição</th>
+        <th>Valor</th>
+    </tr>
+    {% for income in incomes %}
+        <tr>
+            <td>{{ income.date }}</td>
+            <td>{{ income.account }}</td>
+            <td>{{ income.customer.name }}</td>
+            <td>
+                <a href="{{ income.key }}/">
+                    {{ income.description }}
+                </a>
+            </td>
+            <td>{{ income.value|floatformat:"2" }}</td>
+        </tr>
+    {% empty %}
+        <tr>
+            <td colspan="5">Nenhuma receita cadastrada.</td>
+        </tr>
+    {% endfor %}
+</table>
+<h2>Filtro</h2>
+<form action="" method="get">
+{{ date_range_form.as_p }}
+<input type="submit" value="Filtrar" />
+</form>
+
+<h2>Adicionar receita</h2>
+<form action="" method="post">
+{{ form.as_p }}
+<input type="submit" value="Adicionar" />
+</form>
+
+{% endblock %}
