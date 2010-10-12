@@ -57,6 +57,11 @@ indexes:
   - name: account
   - name: name
 
+- kind: Customer
+  properties:
+  - name: user
+  - name: name
+
 - kind: Transaction
   properties:
   - name: income
