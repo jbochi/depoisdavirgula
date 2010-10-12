@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from aetycoon import DerivedProperty, TransformProperty
+from aetycoon import DerivedProperty
 from django.template.defaultfilters import slugify
 from google.appengine.ext import db
 
@@ -51,7 +51,7 @@ class Customer(db.Model):
         return str(slugify(self.name))
 
     def __unicode__(self):
-        return u"%s" % (self.name, ) 
+        return u"%s" % (self.name,)
 
     def get_absolute_url(self):
         return "%s%s/" % (self.account.get_absolute_url(), self.slug)

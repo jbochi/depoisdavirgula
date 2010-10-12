@@ -263,20 +263,20 @@ class Expenses(webapp.RequestHandler):
             else:
                 form = ExpenseForm(user)
 
-            start, end = get_start_end_range(self.request)            
+            start, end = get_start_end_range(self.request)
             date_range_form = DateRangeForm()
             date_range_form.fields['start'].initial = start
             date_range_form.fields['end'].initial = end
-              
+
             expenses = Transaction.all()\
                 .filter('user =', user)\
                 .filter('income =', False)\
                 .filter('date >=', start)\
                 .filter('date <=', end)\
                 .order('-date').fetch(1000)
-                
+
             prefetch_refprops(expenses, Transaction.account)
-                
+
             path = os.path.join(os.path.dirname(__file__), 'templates/expenses.html')
             self.response.out.write(template.render(path, {
                 'start': start,
@@ -307,7 +307,7 @@ class Expense(webapp.RequestHandler):
             instance = Transaction.get(expense_key)
             if instance.user != user:
                 self.redirect(users.create_login_url(self.request.uri))
-            
+
             if post:
                 form = ExpenseForm(user, instance=instance, data=self.request.POST)
                 if form.is_valid():
@@ -352,7 +352,7 @@ class Incomes(webapp.RequestHandler):
                 form = IncomeForm(user, data=self.request.POST)
                 if form.is_valid():
                     transaction = form.save(commit=False)
-                    transaction.account = transaction.customer.account                    
+                    transaction.account = transaction.customer.account
                     transaction.user = user
                     transaction.income = True
                     transaction.put()
@@ -360,20 +360,20 @@ class Incomes(webapp.RequestHandler):
             else:
                 form = IncomeForm(user)
 
-            start, end = get_start_end_range(self.request)            
+            start, end = get_start_end_range(self.request)
             date_range_form = DateRangeForm()
             date_range_form.fields['start'].initial = start
             date_range_form.fields['end'].initial = end
-              
+
             incomes = Transaction.all()\
                 .filter('user =', user)\
                 .filter('income =', True)\
                 .filter('date >=', start)\
                 .filter('date <=', end)\
                 .order('-date').fetch(1000)
-                
+
             prefetch_refprops(incomes, Transaction.account, Transaction.customer)
-                
+
             path = os.path.join(os.path.dirname(__file__), 'templates/incomes.html')
             self.response.out.write(template.render(path, {
                 'start': start,
@@ -404,7 +404,7 @@ class Income(webapp.RequestHandler):
             instance = Transaction.get(expense_key)
             if instance.user != user:
                 self.redirect(users.create_login_url(self.request.uri))
-                
+
             if post:
                 form = IncomeForm(user, instance=instance, data=self.request.POST)
                 if form.is_valid():
@@ -445,32 +445,32 @@ class IncomeDelete(webapp.RequestHandler):
 
 def get_start_end_range(request):
     # setup date filter. default is current month
-    now = datetime.datetime.now()            
+    now = datetime.datetime.now()
     def str2date(str):
         year, month, day = map(int, str.split('-'))
-        return datetime.date(year, month, day)            
-    
+        return datetime.date(year, month, day)
+
     if 'start' in request.GET:
         start = str2date(request.GET['start'])
     else:
         start = datetime.date(now.year, now.month, 1)
-    
+
     if 'end' in request.GET:
         end = str2date(request.GET['end'])
     else:
         end = datetime.date(now.year, now.month, now.day)
-    
+
     return start, end
-    
+
 
 def calc_expenses_js_data(expenses):
     values = {}
-    
+
     for expense in expenses:
         half_day = 86400000 / 2 #to make the value be in the "center" of the day 
-        epoch_time = time.mktime(expense.date.timetuple()) * 1000 - half_day        
+        epoch_time = time.mktime(expense.date.timetuple()) * 1000 - half_day
         values[epoch_time] = values.get(epoch_time, 0) + expense.value
-    
+
     return simplejson.dumps(list(values.iteritems()))
 
 application = webapp.WSGIApplication([('/', MainPage),
