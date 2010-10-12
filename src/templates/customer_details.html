@@ -5,10 +5,11 @@
 <h1>Cliente {{ customer.name }}</h1>
 
 <p><label>Conta:</label> {{ account.name }}</p> 
+
 <form action="" method="post">
-{{ form.as_p }}
-<input type="submit" value="Salvar" />
-<a href="delete/">apagar</a>
+    {{ form.as_p }}
+    <input type="submit" value="Salvar" />
+    <a href="delete/">apagar</a>
 </form>
 
 {% endblock %}
