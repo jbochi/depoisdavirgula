@@ -33,9 +33,9 @@ class ExpenseForm(djangoforms.ModelForm):
         self.fields['account'].query = Account.all().filter('user =', user)\
                                                     .order('name')
         self.fields['category'].query = Category.all()\
-            .filter('user =', user)\
-            .filter('type =', 'Custo')\
-            .order('name').fetch(1000)
+                                                .filter('user =', user)\
+                                                .filter('type =', 'Custo')\
+                                                .order('name').fetch(1000)
 
     class Meta:
         model = Transaction
@@ -45,7 +45,8 @@ class ExpenseForm(djangoforms.ModelForm):
 class IncomeForm(djangoforms.ModelForm):
     def __init__(self, user, *args, **kwargs):
         super(IncomeForm, self).__init__(*args, **kwargs)
-        self.fields['customer'].query = Customer.all().filter('user =', user)
+        self.fields['customer'].query = Customer.all().filter('user =', user)\
+                                                      .order('name').fetch(1000)
         self.fields['category'].query = Category.all()\
                                                 .filter('user =', user)\
                                                 .filter('type =', 'Receita')\
