@@ -60,6 +60,11 @@ indexes:
 - kind: Customer
   properties:
   - name: user
+  - name: birth
+
+- kind: Customer
+  properties:
+  - name: user
   - name: name
 
 - kind: Transaction

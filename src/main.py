@@ -15,6 +15,7 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 
 from forms import AccountForm, CustomerForm, CategoryForm, DateRangeForm, ExpenseForm, IncomeForm
 from models import Account, Customer, Category, Transaction, prefetch_refprops
+from utils import days_to_birthday
 
 
 class MainPage(webapp.RequestHandler):
@@ -79,6 +80,25 @@ class AccountDetails(webapp.RequestHandler):
             }))
         else:
             self.redirect(users.create_login_url(self.request.uri))
+
+class Birthdays(webapp.RequestHandler):
+    def get(self):
+        user = users.get_current_user()
+        if user:
+            customers = Customer.all().filter('user =', user)\
+                                      .fetch(1000)
+
+            customers = filter(lambda customer: customer.birth, customers)
+            customers.sort(key=lambda customer: \
+                           days_to_birthday(customer.birth))
+
+            path = os.path.join(os.path.dirname(__file__), 'templates/birthdays.html')
+            self.response.out.write(template.render(path, {
+                'customers': customers[:10],
+            }))
+        else:
+            self.redirect(users.create_login_url(self.request.uri))
+
 
 class CustomerNew(webapp.RequestHandler):
     def _handler(self, account_slug, post=False):
@@ -454,6 +474,7 @@ def calc_expenses_js_data(expenses):
     return simplejson.dumps(list(values.iteritems()))
 
 application = webapp.WSGIApplication([('/', MainPage),
+                                      ('/aniversariantes/', Birthdays),
                                       ('/contas/', Accounts),
                                       ('/contas/(.*)/new/', CustomerNew),
                                       ('/contas/(.*)/(.*)/delete/', CustomerDelete),

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>Próximos aniversários</h1>
+
+{% if customers %}
+    <ul>
+    {% for customer in customers %}
+        <li>
+            <a href="/contas/{{ customer.account.slug }}/{{ customer.slug }}/">
+                {{ customer.name }}</a>
+            - {{ customer.birth.day }}/{{ customer.birth.month }}            
+        </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>Você ainda não possui nenhum cliente.</p>
+{% endif %}
+
+{% endblock %}
