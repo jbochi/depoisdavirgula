@@ -69,6 +69,14 @@ indexes:
 
 - kind: Transaction
   properties:
+  - name: account
+  - name: income
+  - name: user
+  - name: date
+    direction: desc
+
+- kind: Transaction
+  properties:
   - name: income
   - name: user
   - name: date

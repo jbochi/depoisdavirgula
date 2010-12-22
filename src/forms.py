@@ -57,6 +57,11 @@ class IncomeForm(djangoforms.ModelForm):
         exclude = ['user', 'account', 'income']
 
 
-class DateRangeForm(forms.Form):
+class FilterForm(forms.Form):
+    account = djangoforms.ModelChoiceField(Account, None, label="conta")
     start = forms.DateField(label="início")
     end = forms.DateField(label="fim")
+
+    def __init__(self, user, *args, **kwargs):
+        super(FilterForm, self).__init__(*args, **kwargs)
+        self.fields['account'].query = Account.all().filter('user =', user).order('name')

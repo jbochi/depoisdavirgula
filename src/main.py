@@ -13,7 +13,7 @@ from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 
 
-from forms import AccountForm, CustomerForm, CategoryForm, DateRangeForm, ExpenseForm, IncomeForm
+from forms import AccountForm, CustomerForm, CategoryForm, FilterForm, ExpenseForm, IncomeForm
 from models import Account, Customer, Category, Transaction, prefetch_refprops
 from utils import days_to_birthday
 
@@ -264,16 +264,22 @@ class Expenses(webapp.RequestHandler):
                 form = ExpenseForm(user)
 
             start, end = get_start_end_range(self.request)
-            date_range_form = DateRangeForm()
-            date_range_form.fields['start'].initial = start
-            date_range_form.fields['end'].initial = end
+            account_key = self.request.get('account', None)
+            filter_form = FilterForm(user)
+            filter_form.fields['start'].initial = start
+            filter_form.fields['end'].initial = end
+            filter_form.fields['account'].initial = account_key
 
             expenses = Transaction.all()\
                 .filter('user =', user)\
                 .filter('income =', False)\
                 .filter('date >=', start)\
-                .filter('date <=', end)\
-                .order('-date').fetch(1000)
+                .filter('date <=', end)
+
+            if account_key:
+                expenses = expenses.filter('account =', Account.get(account_key))
+
+            expenses = expenses.order('-date').fetch(1000)
 
             prefetch_refprops(expenses, Transaction.account)
 
@@ -281,7 +287,7 @@ class Expenses(webapp.RequestHandler):
             self.response.out.write(template.render(path, {
                 'start': start,
                 'end': end,
-                'date_range_form': date_range_form,
+                'filter_form': filter_form,
                 'expenses': expenses,
                 'form': form,
                 'user': user,
@@ -361,16 +367,22 @@ class Incomes(webapp.RequestHandler):
                 form = IncomeForm(user)
 
             start, end = get_start_end_range(self.request)
-            date_range_form = DateRangeForm()
-            date_range_form.fields['start'].initial = start
-            date_range_form.fields['end'].initial = end
+            account_key = self.request.get('account', None)
+            filter_form = FilterForm(user)
+            filter_form.fields['start'].initial = start
+            filter_form.fields['end'].initial = end
+            filter_form.fields['account'].initial = account_key
 
             incomes = Transaction.all()\
                 .filter('user =', user)\
                 .filter('income =', True)\
                 .filter('date >=', start)\
-                .filter('date <=', end)\
-                .order('-date').fetch(1000)
+                .filter('date <=', end)
+
+            if account_key:
+                incomes = incomes.filter('account =', Account.get(account_key))
+
+            incomes = incomes.order('-date').fetch(1000)
 
             prefetch_refprops(incomes, Transaction.account, Transaction.customer)
 
@@ -378,7 +390,7 @@ class Incomes(webapp.RequestHandler):
             self.response.out.write(template.render(path, {
                 'start': start,
                 'end': end,
-                'date_range_form': date_range_form,
+                'filter_form': filter_form,
                 'incomes': incomes,
                 'form': form,
                 'user': user,
